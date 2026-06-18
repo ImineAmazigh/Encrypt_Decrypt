@@ -1,75 +1,123 @@
 # Encrypt_Decrypt
 
-A simple C program that demonstrates encrypting and decrypting text using the XOR cipher (character-by-character).
+A small, interactive C program (encrypt_decrypt.c) that demonstrates file-level encryption and decryption using a simple XOR cipher applied to each byte.
 
-> NOTE: This project is intended for learning and demonstration only. The XOR cipher is not secure for real-world use unless implemented with proper one-time-pad practices.
+This program is designed for learning and experimentation: it reads a file in binary mode, XORs every byte with a single-byte numeric key (0–255), and writes the result to an output file. Running the program again on the ciphertext with the same key restores the original file.
 
-## Features
+Warning: XOR with a single-byte repeating key is not secure for protecting real data. See the Security section below.
 
-- Encrypts plain text using a single-byte key (XOR operation on each character).
-- Decrypts ciphertext using the same key.
-- Minimal, easy-to-read C code suitable for beginners learning about bitwise operations and basic cryptography concepts.
+---
+
+## Features (what encrypt_decrypt.c does)
+
+- Interactive prompts for:
+  - input filename
+  - output filename
+  - numeric key (1–255)
+- Binary-safe: opens files with `rb`/`wb`, so it works with text and binary files (images, executables, etc.).
+- Simple, easy-to-read implementation using fgetc/fputc and a single-byte XOR operation.
+- Clear error messages on failure:
+  - "Error: File not found!" if the input file can't be opened
+  - "Error: Cannot create output file!" if the output file can't be created
+- Prints a success message and a reminder to use the same key to decrypt:
+  - "File encrypted successfully!"
+  - "Run with the SAME key to decrypt"
 
 ## Requirements
 
 - A C compiler (gcc, clang, or any standards-compliant C compiler).
-- A Unix-like shell or Windows command prompt.
+- A terminal (Linux/macOS) or Command Prompt / PowerShell (Windows).
 
 ## Build
 
-Compile the program with gcc:
+Compile the program with gcc (example):
 
 ```sh
-gcc -o xor_cipher main.c
+gcc -std=c99 -O2 -o encrypt_decrypt encrypt_decrypt.c
 ```
 
-Replace `main.c` with the source file name used in this repository if different.
+Replace `encrypt_decrypt.c` with the actual filename if different.
 
 ## Usage
 
-Basic usage (example):
+This program is interactive — it asks for the input filename, output filename, and key when run.
+
+Example interactive session:
+
+$ ./encrypt_decrypt
+=== FILE ENCRYPTION (XOR) ===
+
+Enter input filename: plain.txt
+Enter output filename: encrypted.bin
+Enter key (number 1-255): 42
+
+File encrypted successfully!
+Run with the SAME key to decrypt
+
+To decrypt, run the program again and provide `encrypted.bin` as input, a new output filename (e.g., `recovered.txt`), and the same key `42`.
+
+Non-interactive automation
+
+You can supply the three inputs via STDIN if you want to script the operation (useful for demos or CI):
 
 ```sh
-# Encrypt
-./xor_cipher encrypt "Hello, world!" 42 > encrypted.bin
-
-# Decrypt
-./xor_cipher decrypt encrypted.bin 42
+printf "plain.txt\nencrypted.bin\n42\n" | ./encrypt_decrypt
 ```
 
-- The second argument is the key (an integer value between 0 and 255). The same key must be used to decrypt the output.
-- If your program reads from stdin or writes to stdout, you can pipe data or redirect files as shown above.
+Or using a here-document:
 
-## Example
+```sh
+./encrypt_decrypt <<EOF
+plain.txt
+encrypted.bin
+42
+EOF
+```
 
-Given the input `"ABC"` and key `1`, the encryption XORs each character with 1. Decrypting the result with the same key returns the original text.
+Example end-to-end demo
 
-## How it works (short)
+```sh
+# Create a sample file
+printf "Hello, XOR!\n" > plain.txt
 
-XOR is a bitwise operation that has the property:
+# Encrypt
+printf "plain.txt\nencrypted.bin\n42\n" | ./encrypt_decrypt
 
-A XOR B XOR B = A
+# Decrypt to a new file
+printf "encrypted.bin\nrecovered.txt\n42\n" | ./encrypt_decrypt
 
-This makes XOR suitable for simple symmetric encryption: applying the same single-byte key twice returns the original byte. The program applies XOR to each byte of the input with the provided key to produce ciphertext; applying XOR again with the same key recovers the plaintext.
+# Compare
+hexdump -C plain.txt
+hexdump -C recovered.txt
+```
 
-## Security note
+## Notes about key and behavior
 
-XOR with a single repeating key is vulnerable to frequency analysis and other attacks. Do not use this approach to protect sensitive data. For real-world encryption use well-vetted algorithms and libraries (AES, libsodium, OpenSSL, etc.).
+- The program prompts: "Enter key (number 1-255)" — it expects an integer value. The code does not enforce the 1–255 range, so avoid 0 (XOR key 0 leaves bytes unchanged).
+- The XOR operation is symmetric: applying the same key twice returns the original data.
+- The program exits with code 1 when it cannot open the input file or cannot create the output file.
 
-## Contributing
+## Security
 
-Contributions are welcome. Please open an issue or a pull request with a clear description of the change.
+- This implementation is educational only. A single-byte XOR key repeated across a file is extremely weak: it is vulnerable to frequency analysis, known-plaintext attacks, and simple statistical attacks.
+- Do NOT use this for protecting real secrets or transmitting sensitive data.
+- For real-world confidentiality use established cryptographic libraries and algorithms (e.g., AES-GCM via libsodium or OpenSSL), with proper key management.
 
-Ideas for improvements:
+## Possible improvements
 
-- Add support for multi-byte keys or key files.
-- Add command-line flags for input/output files, key parsing, and different modes.
-- Add unit tests and example test vectors.
+If you want to extend the program, consider:
+
+- Accepting command-line flags (input, output, key) instead of interactive prompts.
+- Validating the key range and rejecting invalid input.
+- Allowing multi-byte keys or reading a key from a file.
+- Generating a random key and saving it to a protected key file (or printing a hex key) for one-time-pad style usage.
+- Adding progress reporting for large files and unit tests.
+- Using a proper crypto library if you need security guarantees.
 
 ## License
 
-This repository is provided under the MIT License. See LICENSE for details (or add an appropriate license file).
+If you want to license this code, add a LICENSE file (e.g., MIT) to the repository. By default there is no license in the repo, which means others cannot legally reuse the code.
 
-## Contact
+## Author
 
-Created by ImineAmazigh. For questions or feedback, open an issue or contact via GitHub.
+Created by ImineAmazigh. For questions or suggested changes, open an issue or submit a pull request.
