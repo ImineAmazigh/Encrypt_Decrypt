@@ -1,4 +1,5 @@
 # Encrypt_Decrypt
+<img width="2245" height="1587" alt="Before(1)" src="https://github.com/user-attachments/assets/f9d278f1-0058-49a2-8fa3-7b8b07a33675" />
 
 A small, educational C program that demonstrates file-level encryption and decryption using a simple XOR cipher applied to each byte.
 
